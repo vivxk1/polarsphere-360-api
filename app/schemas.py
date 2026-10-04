@@ -67,6 +67,7 @@ def envelope(
 class SearchRequest(BaseModel):
     q: str = ""
     type: Optional[str] = None  # documents | datasets | media | all
+    docType: Optional[str] = None  # report | paper | dataset-documentation | upload
     station: Optional[str] = None
     theme: Optional[str] = None
     year: Optional[int] = None

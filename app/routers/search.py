@@ -45,11 +45,17 @@ def search(req: SearchRequest, db: Session = Depends(get_db)):
     documents = []
     if kind in ("all", "documents", "docs"):
         if req.q.strip():
+            # over-fetch when narrowing by docType, then trim back to the limit
+            fetch = min(req.limit * 4, 200) if req.docType else req.limit
             hits = hybrid_search(
                 db, req.q, station=req.station, theme=req.theme, year=req.year,
-                source=req.source, limit=req.limit,
+                source=req.source, limit=fetch,
             )
             documents = [_doc_card(p) for p in hits]
+            if req.docType:
+                documents = [
+                    d for d in documents if (d.get("docType") or "").lower() == req.docType.lower()
+                ][: req.limit]
         else:
             q = db.query(Document)
             if req.station:
@@ -58,6 +64,8 @@ def search(req: SearchRequest, db: Session = Depends(get_db)):
                 q = q.filter(Document.theme == req.theme)
             if req.year:
                 q = q.filter(Document.year == req.year)
+            if req.docType:
+                q = q.filter(Document.doc_type == req.docType)
             documents = [
                 {
                     "id": d.id,

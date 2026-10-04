@@ -1,5 +1,6 @@
 """Expeditions, stations and map layers."""
 from __future__ import annotations
+from typing import Optional
 
 import time
 
@@ -148,7 +149,7 @@ def list_stations(db: Session = Depends(get_db)):
 
 
 @router.get("/map/features")
-def map_features(layer: str | None = None, db: Session = Depends(get_db)):
+def map_features(layer: Optional[str] = None, db: Session = Depends(get_db)):
     t0 = time.perf_counter()
     q = db.query(MapFeature)
     if layer:
@@ -162,4 +163,64 @@ def map_features(layer: str | None = None, db: Session = Depends(get_db)):
         ],
         "layers": sorted({r.layer for r in rows}),
     }
+    return envelope(data, started_at=t0)
+
+
+@router.get("/datasets")
+def list_datasets(station: Optional[str] = None, theme: Optional[str] = None, db: Session = Depends(get_db)):
+    """Catalogue of tabular/netCDF datasets. Used by the Data page."""
+    t0 = time.perf_counter()
+    q = db.query(Dataset)
+    if station:
+        q = q.filter(Dataset.station_id == station)
+    if theme:
+        q = q.filter(Dataset.theme == theme)
+    rows = q.all()
+
+    data = [
+        {
+            "id": d.id,
+            "title": d.title,
+            "station": d.station_id,
+            "theme": d.theme,
+            "year": d.year,
+            "format": d.format,
+            "variables": d.variables or [],
+            "rows": d.rows,
+            "sizeLabel": d.size_label,
+            "abstract": d.abstract,
+            "license": d.license,
+            "authority": d.authority,
+        }
+        for d in rows
+    ]
+    return envelope(data, started_at=t0)
+
+
+@router.get("/media")
+def list_media(station: Optional[str] = None, kind: Optional[str] = None, db: Session = Depends(get_db)):
+    """Media catalogue — images, video and audio with transcripts."""
+    t0 = time.perf_counter()
+    q = db.query(Media)
+    if station:
+        q = q.filter(Media.station_id == station)
+    if kind:
+        q = q.filter(Media.media_type == kind)
+    rows = q.all()
+
+    data = [
+        {
+            "id": m.id,
+            "title": m.title,
+            "kind": m.media_type,
+            "station": m.station_id,
+            "theme": m.theme,
+            "year": m.year,
+            "thumb": m.thumb,
+            "license": m.license,
+            "tags": m.tags or [],
+            "hasTranscript": bool(m.transcript),
+        }
+        for m in rows
+    ]
     return envelope(data, started_at=t0)

@@ -6,6 +6,7 @@ features) and the knowledge graph is a plain adjacency pair. Both can be upgrade
 later without touching the API surface.
 """
 from __future__ import annotations
+from typing import Optional
 
 import uuid
 from datetime import datetime
@@ -43,11 +44,11 @@ class Station(Base):
     name: Mapped[str] = mapped_column(String(128))
     region: Mapped[str] = mapped_column(String(64), default="Antarctica")
     station_type: Mapped[str] = mapped_column(String(64), default="research station")
-    established: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    established: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     lat: Mapped[float] = mapped_column(Float)
     lon: Mapped[float] = mapped_column(Float)
     summary: Mapped[str] = mapped_column(Text, default="")
-    hero_image: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    hero_image: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     meta: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
@@ -58,8 +59,8 @@ class Expedition(Base):
     name: Mapped[str] = mapped_column(String(160))
     season: Mapped[str] = mapped_column(String(64), default="")
     status: Mapped[str] = mapped_column(String(32), default="completed")
-    start_date: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    end_date: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    start_date: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    end_date: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     summary: Mapped[str] = mapped_column(Text, default="")
     lead_institution: Mapped[str] = mapped_column(String(128), default="NCPOR")
     meta: Mapped[dict] = mapped_column(JSON, default=dict)
@@ -100,12 +101,12 @@ class Document(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     title: Mapped[str] = mapped_column(String(300))
     doc_type: Mapped[str] = mapped_column(String(64), default="report")
-    station_id: Mapped[str | None] = mapped_column(ForeignKey("stations.id"), nullable=True)
-    expedition_id: Mapped[str | None] = mapped_column(ForeignKey("expeditions.id"), nullable=True)
+    station_id: Mapped[Optional[str]] = mapped_column(ForeignKey("stations.id"), nullable=True)
+    expedition_id: Mapped[Optional[str]] = mapped_column(ForeignKey("expeditions.id"), nullable=True)
     theme: Mapped[str] = mapped_column(String(64), default="")
-    year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     abstract: Mapped[str] = mapped_column(Text, default="")
-    file_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    file_path: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     page_count: Mapped[int] = mapped_column(Integer, default=0)
     license: Mapped[str] = mapped_column(String(128), default="CC BY 4.0")
     authority: Mapped[str] = mapped_column(String(128), default="NCPOR")
@@ -123,7 +124,7 @@ class Chunk(Base):
     document_id: Mapped[str] = mapped_column(ForeignKey("documents.id"))
     chunk_index: Mapped[int] = mapped_column(Integer, default=0)
     text: Mapped[str] = mapped_column(Text)
-    page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    page: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     embedding = mapped_column(Vector(EMBED_DIM), nullable=True)
     tsv = mapped_column(TSVECTOR, nullable=True)
 
@@ -135,10 +136,10 @@ class Dataset(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     title: Mapped[str] = mapped_column(String(300))
-    station_id: Mapped[str | None] = mapped_column(ForeignKey("stations.id"), nullable=True)
-    expedition_id: Mapped[str | None] = mapped_column(ForeignKey("expeditions.id"), nullable=True)
+    station_id: Mapped[Optional[str]] = mapped_column(ForeignKey("stations.id"), nullable=True)
+    expedition_id: Mapped[Optional[str]] = mapped_column(ForeignKey("expeditions.id"), nullable=True)
     theme: Mapped[str] = mapped_column(String(64), default="")
-    year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     format: Mapped[str] = mapped_column(String(32), default="CSV")
     variables: Mapped[list] = mapped_column(JSON, default=list)
     rows: Mapped[int] = mapped_column(Integer, default=0)
@@ -172,10 +173,10 @@ class Media(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     title: Mapped[str] = mapped_column(String(300))
     media_type: Mapped[str] = mapped_column(String(32), default="image")  # image | video | audio
-    station_id: Mapped[str | None] = mapped_column(ForeignKey("stations.id"), nullable=True)
-    expedition_id: Mapped[str | None] = mapped_column(ForeignKey("expeditions.id"), nullable=True)
+    station_id: Mapped[Optional[str]] = mapped_column(ForeignKey("stations.id"), nullable=True)
+    expedition_id: Mapped[Optional[str]] = mapped_column(ForeignKey("expeditions.id"), nullable=True)
     theme: Mapped[str] = mapped_column(String(64), default="")
-    year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     thumb: Mapped[str] = mapped_column(String(512), default="")
     license: Mapped[str] = mapped_column(String(128), default="CC BY 4.0")
     transcript: Mapped[str] = mapped_column(Text, default="")
@@ -188,7 +189,7 @@ class Post(Base):
     __tablename__ = "posts"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    source_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    source_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
     audience: Mapped[str] = mapped_column(String(64), default="General Public")
     language: Mapped[str] = mapped_column(String(8), default="en")
     format: Mapped[str] = mapped_column(String(64), default="Blog Post")
@@ -207,7 +208,7 @@ class Annotation(Base):
     __tablename__ = "annotations"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    media_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    media_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
     label: Mapped[str] = mapped_column(String(128))
     votes: Mapped[list] = mapped_column(JSON, default=list)
     consensus: Mapped[bool] = mapped_column(default=False)
@@ -220,11 +221,11 @@ class Observation(Base):
     __tablename__ = "observations"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    station_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    station_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     payload: Mapped[dict] = mapped_column(JSON, default=dict)
     status: Mapped[str] = mapped_column(String(32), default="queued")
     queued_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
-    synced_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    synced_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
 
 class MapFeature(Base):
@@ -261,11 +262,11 @@ class IngestJob(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     filename: Mapped[str] = mapped_column(String(300))
-    document_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    document_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="queued")
     steps: Mapped[list] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
 
 # Approval stages used by the outreach workflow

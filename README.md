@@ -9,6 +9,14 @@ in `docs/backend-integration.md`: every endpoint returns `{ data, provenance }`.
 
 ---
 
+## Requirements
+
+| Requirement | Notes |
+|---|---|
+| **Python 3.9+** | Tested on 3.11. On Python 3.9 use `python3 -m uvicorn` — the `uvicorn` script may not land on `PATH`. |
+| **Docker Desktop** | Required for Postgres 16 + pgvector. Without it nothing runs. |
+| **~4 GB disk** | ~90 MB MiniLM embeddings + ~3 GB Qwen2.5-1.5B, downloaded on first run and cached. |
+
 ## Quick start
 
 ```bash

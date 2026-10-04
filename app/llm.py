@@ -23,7 +23,8 @@ from .config import (
     OPENAI_MODEL,
 )
 
-_lock = threading.Lock()
+_lock = threading.Lock()        # guards model loading
+_gen_lock = threading.Lock()    # guards inference — one generate() at a time
 _qwen = None
 
 
@@ -67,17 +68,20 @@ class LocalQwenGenerator(Generator):
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ]
-        prompt = self.tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        inputs = self.tok(prompt, return_tensors="pt")
-        with torch.no_grad():
-            out = self.model.generate(
-                **inputs,
-                max_new_tokens=LLM_MAX_NEW_TOKENS,
-                temperature=LLM_TEMPERATURE,
-                do_sample=LLM_TEMPERATURE > 0,
-                top_p=0.9,
-                pad_token_id=self.tok.eos_token_id,
-            )
+        with _gen_lock:
+            # A single model instance is not safe to drive from two requests at once;
+            # concurrent generate() calls raise RuntimeError mid-sample.
+            prompt = self.tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            inputs = self.tok(prompt, return_tensors="pt")
+            with torch.no_grad():
+                out = self.model.generate(
+                    **inputs,
+                    max_new_tokens=LLM_MAX_NEW_TOKENS,
+                    temperature=LLM_TEMPERATURE,
+                    do_sample=LLM_TEMPERATURE > 0,
+                    top_p=0.9,
+                    pad_token_id=self.tok.eos_token_id,
+                )
         new_tokens = out[0][inputs["input_ids"].shape[-1]:]
         return self.tok.decode(new_tokens, skip_special_tokens=True).strip()
 

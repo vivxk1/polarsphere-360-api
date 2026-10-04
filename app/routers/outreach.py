@@ -1,5 +1,6 @@
 """AI-drafted outreach content and the human approval workflow."""
 from __future__ import annotations
+from typing import Optional
 
 import re
 import time
@@ -220,7 +221,7 @@ def approve(post_id: str, req: ApproveRequest, db: Session = Depends(get_db)):
 
 
 @router.get("")
-def list_posts(stage: str | None = None, db: Session = Depends(get_db)):
+def list_posts(stage: Optional[str] = None, db: Session = Depends(get_db)):
     t0 = time.perf_counter()
     q = db.query(Post)
     if stage:

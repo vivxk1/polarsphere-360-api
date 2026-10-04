@@ -1,5 +1,6 @@
 """Citizen science annotations and FieldSync offline observations."""
 from __future__ import annotations
+from typing import Optional
 
 import time
 import uuid
@@ -105,7 +106,7 @@ def annotate(req: CitizenAnnotationRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/citizen/annotations")
-def list_annotations(mediaId: str | None = None, db: Session = Depends(get_db)):
+def list_annotations(mediaId: Optional[str] = None, db: Session = Depends(get_db)):
     t0 = time.perf_counter()
     q = db.query(Annotation)
     if mediaId:

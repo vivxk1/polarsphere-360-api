@@ -18,7 +18,7 @@ from .search import hybrid_search
 
 SYSTEM_PROMPT = (
     "You are Polar AI, an assistant for India's polar research programme (NCPOR). "
-    "Answer ONLY using the numbered passages provided. Every factual sentence must end "
+    "Answer using ONLY the numbered passages provided. Every factual sentence must end "
     "with a citation marker like [1] or [2] matching the passage it came from. "
     "If the passages do not contain the answer, say exactly: "
     "\"The archive does not contain enough evidence to answer that.\" "
@@ -114,6 +114,9 @@ def answer_question(
             )
             answer = gen.generate(SYSTEM_PROMPT, user_prompt) or ""
         except Exception as exc:  # generation must never break the endpoint
+            # Surface the reason: a silent fallback looks like "the model works"
+            # while every answer is actually the extractive template.
+            print(f"[rag] generation failed, falling back to extractive: {exc!r}", flush=True)
             answer = ""
             used = f"extractive (fallback: {type(exc).__name__})"
 
@@ -122,6 +125,13 @@ def answer_question(
         answer = _extractive_answer(q, passages)
     else:
         answer = _strip_ungrounded(answer, len(passages))
+
+    # Guard: a 1.5B model sometimes emits bare markers ("[1] [2] [3]") or a
+    # single sentence fragment. If almost nothing survives stripping the
+    # markers, the generated answer carries no information — use the passages.
+    if len(re.sub(r"\[\d+\]", "", answer).strip()) < 25:
+        used = "extractive (degenerate generation)"
+        answer = _extractive_answer(q, passages)
 
     return {
         "answer": answer,
