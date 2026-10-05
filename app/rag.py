@@ -25,6 +25,16 @@ SYSTEM_PROMPT = (
     "Be concise, factual, and never add information from outside the passages."
 )
 
+# The model is instructed to emit this exact refusal when it judges the passages
+# insufficient. A 1.5B model over-refuses: it will sometimes say this even when
+# hybrid search returned good, on-topic passages. Showing "not enough evidence"
+# directly above five relevant source cards reads as a broken system, so we fall
+# back to the extractive answer and say so in `generator` rather than pretending.
+_ABSTAIN_RE = re.compile(
+    r"does\s+not\s+contain\s+enough\s+evidence|cannot\s+answer|insufficient\s+evidence",
+    re.IGNORECASE,
+)
+
 
 def _build_context(passages: list[dict]) -> str:
     parts = []
@@ -125,6 +135,9 @@ def answer_question(
         answer = _extractive_answer(q, passages)
     else:
         answer = _strip_ungrounded(answer, len(passages))
+        if _ABSTAIN_RE.search(answer):
+            used = "extractive (model abstained, passages were retrieved)"
+            answer = _extractive_answer(q, passages)
 
     # Guard: a 1.5B model sometimes emits bare markers ("[1] [2] [3]") or a
     # single sentence fragment. If almost nothing survives stripping the
