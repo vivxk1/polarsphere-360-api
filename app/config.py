@@ -8,6 +8,11 @@ DATABASE_URL = os.getenv(
 
 EMBED_MODEL = os.getenv("EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 EMBED_DIM = int(os.getenv("EMBED_DIM", "384"))
+# local  - sentence-transformers in-process. Default; no API key, works offline.
+# openai - hosted embeddings, needs OPENAI_API_KEY. Use this where torch cannot
+#          be installed (e.g. Vercel's 250 MB serverless function limit).
+EMBED_BACKEND = os.getenv("EMBED_BACKEND", "local")  # local | openai
+EMBED_OPENAI_MODEL = os.getenv("EMBED_OPENAI_MODEL", "text-embedding-3-small")
 
 LLM_BACKEND = os.getenv("LLM_BACKEND", "local")  # local | openai | extractive
 LLM_MODEL = os.getenv("LLM_MODEL", "Qwen/Qwen2.5-1.5B-Instruct")
